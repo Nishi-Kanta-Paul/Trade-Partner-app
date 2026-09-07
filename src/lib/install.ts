@@ -7,7 +7,26 @@ type InstallEvent = Event & {
 };
 
 const DISMISSED_KEY = "tp-install-dismissed";
+const INSTALLED_KEY = "tp-installed";
 
+function read(key: string) {
+  try {
+    return localStorage.getItem(key) === "1";
+  } catch {
+    // Private browsing — fall back to "not set".
+    return false;
+  }
+}
+
+function remember(key: string) {
+  try {
+    localStorage.setItem(key, "1");
+  } catch {
+    // Nothing to do; the banner just comes back next visit.
+  }
+}
+
+/** True when running from the home-screen icon rather than a browser tab. */
 function isStandalone() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
@@ -20,31 +39,31 @@ function isIOS() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
 }
 
-function wasDismissed() {
-  try {
-    return localStorage.getItem(DISMISSED_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Install state for the home-screen prompt.
  *
- * Chrome and Edge hand us a real install event. iOS Safari has no such API, so
- * the only thing we can do is show the Share → Add to Home Screen steps.
+ * Chrome and Edge hand us a real install event, and stop firing it once the app
+ * is installed. iOS Safari has neither the event nor any way to ask whether the
+ * app is already on the home screen — so the first time the app is opened from
+ * the icon we write that down and never offer the banner again.
  */
 export function useInstall() {
   const [event, setEvent] = React.useState<InstallEvent | null>(null);
-  const [dismissed, setDismissed] = React.useState(() => wasDismissed());
-  const [installed, setInstalled] = React.useState(() => isStandalone());
+  const [dismissed, setDismissed] = React.useState(() => read(DISMISSED_KEY));
+  const [installed, setInstalled] = React.useState(
+    () => isStandalone() || read(INSTALLED_KEY),
+  );
 
   React.useEffect(() => {
+    // Opened from the icon — remember it, so the browser tab stops asking too.
+    if (isStandalone()) remember(INSTALLED_KEY);
+
     const onPrompt = (e: Event) => {
       e.preventDefault();
       setEvent(e as InstallEvent);
     };
     const onInstalled = () => {
+      remember(INSTALLED_KEY);
       setInstalled(true);
       setEvent(null);
     };
@@ -59,27 +78,27 @@ export function useInstall() {
 
   function dismiss() {
     setDismissed(true);
-    try {
-      localStorage.setItem(DISMISSED_KEY, "1");
-    } catch {
-      // Private browsing — the banner just comes back next visit.
-    }
+    remember(DISMISSED_KEY);
   }
 
   async function install() {
     if (!event) return;
     await event.prompt();
     const { outcome } = await event.userChoice;
-    if (outcome === "accepted") setInstalled(true);
+    if (outcome === "accepted") {
+      remember(INSTALLED_KEY);
+      setInstalled(true);
+    }
     setEvent(null);
   }
 
+  // On iOS the only signal is "this is an iPhone and we're not in the app".
   const iosHint = isIOS() && !installed;
 
   return {
     /** Show the banner at all? */
     canShow: !installed && !dismissed && (!!event || iosHint),
-    /** True when we can only give iOS instructions. */
+    /** True when we can only give iOS instructions — no install API there. */
     iosOnly: !event && iosHint,
     installed,
     install,
