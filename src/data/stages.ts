@@ -1,14 +1,7 @@
 import type { Accent } from "@/lib/accents";
 
 export type ActionKind =
-  | "video"
-  | "form"
-  | "call"
-  | "location"
-  | "photos"
-  | "confirm"
-  | "invoice"
-  | "tax";
+  "video" | "form" | "call" | "location" | "photos" | "confirm" | "invoice" | "tax";
 
 export type Action = {
   label: string;
@@ -79,7 +72,6 @@ export const STAGES: Stage[] = [
   //     // },
   //   ],
   // },
-
   // ══════════ REVEAL 3 · "During Cleaning" + its first two actions ══════════
   // {
   //   id: "during",
@@ -111,7 +103,6 @@ export const STAGES: Stage[] = [
   //     // },
   //   ],
   // },
-
   // ══════════ REVEAL 5 · "After Cleaning" + its first two actions ══════════
   // {
   //   id: "after",

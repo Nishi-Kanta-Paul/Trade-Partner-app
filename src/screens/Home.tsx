@@ -4,6 +4,7 @@ import { AppBar } from "@/components/AppBar";
 import { Hero } from "@/components/Hero";
 import { StageSection } from "@/components/StageSection";
 import { NotificationSheet } from "@/components/NotificationSheet";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { STAGES } from "@/data/stages";
 
 export default function Home() {
@@ -34,6 +35,7 @@ export default function Home() {
       </footer> */}
 
       <NotificationSheet open={bellOpen} onClose={() => setBellOpen(false)} />
+      <InstallPrompt />
     </div>
   );
 }
