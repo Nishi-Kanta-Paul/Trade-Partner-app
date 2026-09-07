@@ -35,7 +35,7 @@ export default function Home() {
       </footer> */}
 
       <NotificationSheet open={bellOpen} onClose={() => setBellOpen(false)} />
-      <InstallPrompt />
+      <InstallPrompt hidden={bellOpen} />
     </div>
   );
 }

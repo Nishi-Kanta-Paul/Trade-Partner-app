@@ -5,10 +5,11 @@ import { useInstall } from "@/lib/install";
  * Home-screen install banner. Sits above the safe area so it clears the iOS
  * home indicator, and dismissing it is remembered.
  */
-export function InstallPrompt() {
+export function InstallPrompt({ hidden }: { hidden?: boolean }) {
   const { canShow, iosOnly, install, dismiss } = useInstall();
 
-  if (!canShow) return null;
+  // Never stack on top of an open sheet — one thing asks for attention at a time.
+  if (!canShow || hidden) return null;
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">

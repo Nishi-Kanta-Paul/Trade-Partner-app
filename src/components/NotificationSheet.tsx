@@ -20,7 +20,7 @@ export function NotificationSheet({
   return (
     <div
       className={cn(
-        "fixed inset-0 z-50",
+        "fixed inset-0 z-60",
         open ? "visible" : "pointer-events-none invisible",
       )}
       role="dialog"

@@ -78,7 +78,7 @@ export function useInstall() {
 
   return {
     /** Show the banner at all? */
-    canShow: true || dismissed,
+    canShow: !installed && !dismissed && (!!event || iosHint),
     /** True when we can only give iOS instructions. */
     iosOnly: !event && iosHint,
     installed,
