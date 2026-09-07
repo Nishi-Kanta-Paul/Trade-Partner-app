@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans:
+    "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Cleaning Connected brand */
+  --color-navy: #12315e;
+  --color-navy-deep: #0b1f4b;
+  --color-brand: #f5b920;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* Sticky app bar must not cover a section it just scrolled to. */
+    scroll-padding-top: 5.5rem;
+  }
+
+  body {
+    /* Mobile-app feel: no rubber-band chaining, no grey tap flash. */
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2 {
+    letter-spacing: -0.02em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}
+
+/* Safe-area helpers for fixed top/bottom app chrome. */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Faint blueprint grid behind the hero. */
+@utility surface-grid {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 7%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 7%) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
