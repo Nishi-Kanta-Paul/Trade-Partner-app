@@ -1,5 +1,5 @@
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { JOTFORM_IDS, submitToJotform } from "@/lib/jotform";
+import { sendSubmission } from "@/lib/submit";
 import { ACCENTS, AccentProvider } from "@/lib/accents";
 import { cn } from "@/lib/utils";
 import { Field } from "@/components/form/Field";
@@ -51,7 +51,7 @@ export default function ArrivalForm() {
     EMPTY_ARRIVAL as ArrivalValues & Record<string, never>,
     REQUIRED,
     STEPS.length,
-    (values) => submitToJotform(JOTFORM_IDS.arrival, arrivalPayload(values)),
+    (values) => sendSubmission("arrival", values, arrivalPayload(values)),
   );
   const v = w.values;
 

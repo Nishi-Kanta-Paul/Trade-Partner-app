@@ -1,5 +1,5 @@
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { JOTFORM_IDS, submitToJotform } from "@/lib/jotform";
+import { sendSubmission } from "@/lib/submit";
 import { AccentProvider } from "@/lib/accents";
 import { Field } from "@/components/form/Field";
 import { MoneyInput, TextArea, TextInput } from "@/components/form/TextInput";
@@ -50,7 +50,7 @@ export default function ProposalForm() {
     sending,
     error,
   } = useWizard<ProposalValues>(EMPTY_PROPOSAL, REQUIRED, STEPS.length, (values) =>
-    submitToJotform(JOTFORM_IDS.proposal, proposalPayload(values)),
+    sendSubmission("proposal", values, proposalPayload(values)),
   );
 
   if (submitted)

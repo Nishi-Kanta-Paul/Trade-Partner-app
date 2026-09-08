@@ -1,5 +1,5 @@
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { JOTFORM_IDS, submitToJotform } from "@/lib/jotform";
+import { sendSubmission } from "@/lib/submit";
 import { AccentProvider } from "@/lib/accents";
 import { Field } from "@/components/form/Field";
 import { TextArea, TextInput } from "@/components/form/TextInput";
@@ -63,7 +63,7 @@ export default function DepartureForm() {
     EMPTY_DEPARTURE as DepartureValues & Record<string, never>,
     REQUIRED,
     STEPS.length,
-    (values) => submitToJotform(JOTFORM_IDS.departure, departurePayload(values)),
+    (values) => sendSubmission("departure", values, departurePayload(values)),
   );
   const v = w.values;
   const onSite = hoursOnSite(v.startTime, v.finishTime);

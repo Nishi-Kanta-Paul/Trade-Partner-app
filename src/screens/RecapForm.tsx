@@ -1,5 +1,5 @@
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { JOTFORM_IDS, submitToJotform } from "@/lib/jotform";
+import { sendSubmission } from "@/lib/submit";
 import { ACCENTS, AccentProvider } from "@/lib/accents";
 import { cn } from "@/lib/utils";
 import { Field } from "@/components/form/Field";
@@ -44,7 +44,7 @@ export default function RecapForm() {
     EMPTY_RECAP as RecapValues & Record<string, never>,
     REQUIRED,
     STEPS.length,
-    (values) => submitToJotform(JOTFORM_IDS.recap, recapPayload(values)),
+    (values) => sendSubmission("recap", values, recapPayload(values)),
   );
   const v = w.values;
   const suggestedDays = spanInDays(v.startDate, v.completedDate);

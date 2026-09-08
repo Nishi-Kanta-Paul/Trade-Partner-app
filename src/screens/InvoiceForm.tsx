@@ -1,5 +1,5 @@
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { JOTFORM_IDS, submitToJotform } from "@/lib/jotform";
+import { sendSubmission } from "@/lib/submit";
 import { AccentProvider } from "@/lib/accents";
 import { Field } from "@/components/form/Field";
 import { MoneyInput, TextArea, TextInput } from "@/components/form/TextInput";
@@ -41,7 +41,7 @@ export default function InvoiceForm() {
     EMPTY_INVOICE as InvoiceValues & Record<string, never>,
     REQUIRED,
     STEPS.length,
-    (values) => submitToJotform(JOTFORM_IDS.invoice, invoicePayload(values)),
+    (values) => sendSubmission("invoice", values, invoicePayload(values)),
   );
   const v = w.values;
   const payment = PAYMENT_DETAIL[v.paymentMethod];
