@@ -80,6 +80,11 @@ export function analyse(rows) {
   }
 
   return {
+    daily: daily(rows, arrivals, departures),
+    outcomes: outcomes(departures),
+    serviceMix: serviceMix(rows),
+    projects: projects(rows, departures, invoices),
+    log: [...rows].reverse().slice(0, 12),
     counts: {
       arrivals: arrivals.length,
       departures: departures.length,
@@ -95,6 +100,84 @@ export function analyse(rows) {
     partners: [...partners.values()].sort((a, b) => b.departures - a.departures),
     findings: findings({ rows, arrivals, departures, invoices }),
   };
+}
+
+/** One column per day in the period, even the quiet ones. */
+function daily(rows, arrivals, departures) {
+  if (!rows.length) return { categories: [], arrivals: [], departures: [] };
+
+  const days = [...new Set(rows.map(dayOf))].sort();
+  const first = new Date(days[0]);
+  const last = new Date(days[days.length - 1]);
+  const categories = [];
+  for (let d = new Date(first); d <= last; d.setUTCDate(d.getUTCDate() + 1)) {
+    categories.push(d.toISOString().slice(0, 10));
+  }
+
+  const count = (list, day) => list.filter((row) => dayOf(row) === day).length;
+  return {
+    categories,
+    arrivals: categories.map((day) => count(arrivals, day)),
+    departures: categories.map((day) => count(departures, day)),
+  };
+}
+
+/** How jobs ended — the shape of a whole. */
+function outcomes(departures) {
+  const completed = departures.filter(
+    (row) => row.payload?.status === "100% Completed",
+  ).length;
+  return { completed, needReturn: departures.length - completed };
+}
+
+/** Which work is actually being done, across both daily forms. */
+function serviceMix(rows) {
+  const tally = new Map();
+  for (const row of rows) {
+    const list = row.payload?.activities ?? row.payload?.cleaningToday ?? [];
+    for (const name of list) tally.set(name, (tally.get(name) ?? 0) + 1);
+  }
+  return [...tally.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+}
+
+/** Per-project rollup — where the time and the money went. */
+function projects(rows, departures, invoices) {
+  const map = new Map();
+  const key = (row) => row.project_name || row.project_number || "Unknown project";
+
+  for (const row of rows) {
+    const entry = map.get(key(row)) ?? {
+      name: key(row),
+      number: row.project_number || "",
+      jobs: 0,
+      minutes: 0,
+      returns: 0,
+      invoiced: 0,
+      partners: new Set(),
+    };
+    if (row.partner_name) entry.partners.add(row.partner_name);
+    entry.number ||= row.project_number || "";
+    map.set(key(row), entry);
+  }
+
+  for (const row of departures) {
+    const entry = map.get(key(row));
+    entry.jobs += 1;
+    const minutes = shiftMinutes(row.payload?.startTime, row.payload?.finishTime);
+    if (minutes !== null) entry.minutes += minutes;
+    if (row.payload?.status === "Need to Return") entry.returns += 1;
+  }
+
+  for (const row of invoices) {
+    map.get(key(row)).invoiced += Number(row.amount) || 0;
+  }
+
+  return [...map.values()]
+    .map((entry) => ({ ...entry, partners: entry.partners.size }))
+    .sort((a, b) => b.jobs - a.jobs || b.invoiced - a.invoiced);
 }
 
 /**
