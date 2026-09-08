@@ -62,13 +62,17 @@ export function MediaUpload({
         multiple
         className="sr-only"
         onChange={async (e) => {
-          const picked = Array.from(e.target.files ?? []);
-          e.target.value = "";
+          const input = e.target;
+          const picked = Array.from(input.files ?? []);
           if (!picked.length) return;
+
           setBusy(true);
           // Photos are shrunk; videos are kept as they are.
           onChange([...files, ...(await prepareUploads(picked))]);
           setBusy(false);
+
+          // Reset last — clearing it first drops the files on some browsers.
+          input.value = "";
         }}
       />
 

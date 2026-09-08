@@ -1,13 +1,20 @@
 import * as React from "react";
-import { Camera, RotateCcw, TriangleAlert, X } from "lucide-react";
+import { ImagePlus, RotateCcw, TriangleAlert, X } from "lucide-react";
 import { compressImage } from "@/lib/image";
 import { useAccent } from "@/lib/accents";
 import { cn } from "@/lib/utils";
 
 /**
- * Camera-first upload. The office needs landscape shots, so the picked image is
- * measured and the partner is told immediately if the phone was held upright —
- * far better than finding out after the job.
+ * Single-photo upload.
+ *
+ * Deliberately no `capture` attribute: it forces the camera app, and several
+ * Android browsers then offer no gallery at all or hand back nothing. Without
+ * it the OS shows its own sheet — camera, gallery, files — which is both more
+ * reliable and closer to how crews work, shooting as they go and uploading
+ * afterwards.
+ *
+ * The office needs landscape shots, so the picked image is measured and the
+ * partner is told straight away if the phone was held upright.
  */
 export function PhotoUpload({
   file,
@@ -46,16 +53,20 @@ export function PhotoUpload({
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         className="sr-only"
         onChange={async (e) => {
-          const picked = e.target.files?.[0];
-          e.target.value = "";
+          const input = e.target;
+          const picked = input.files?.[0];
           if (!picked) return;
+
           setBusy(true);
           // Shrink before it goes anywhere — a raw camera shot is 4–12 MB.
           onChange(await compressImage(picked));
           setBusy(false);
+
+          // Reset last: clearing it first drops the file's data on some browsers,
+          // and it has to be cleared at all so re-picking the same photo fires.
+          input.value = "";
         }}
       />
 
@@ -80,7 +91,7 @@ export function PhotoUpload({
             className="text-navy flex w-full items-center justify-center gap-2 border-t border-slate-200 bg-white py-3 text-[14px] font-bold transition-colors hover:bg-slate-50 dark:border-white/12 dark:bg-white/[.04] dark:text-white"
           >
             <RotateCcw className="size-4" />
-            Retake
+            Replace photo
           </button>
         </div>
       ) : (
@@ -99,13 +110,13 @@ export function PhotoUpload({
               theme.fill,
             )}
           >
-            <Camera className="size-6" />
+            <ImagePlus className="size-6" />
           </span>
           <span className="text-navy text-[15px] font-bold dark:text-white">
-            Take or choose a photo
+            {busy ? "Preparing…" : "Upload a photo"}
           </span>
           <span className="text-[13px] text-slate-500 dark:text-slate-400">
-            {busy ? "Preparing…" : "Hold the phone sideways"}
+            {busy ? "Getting it ready to send" : "From your gallery, or take one now"}
           </span>
         </button>
       )}
