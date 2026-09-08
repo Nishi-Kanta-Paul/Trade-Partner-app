@@ -1,4 +1,5 @@
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { JOTFORM_IDS, submitToJotform } from "@/lib/jotform";
 import { AccentProvider } from "@/lib/accents";
 import { Field } from "@/components/form/Field";
 import { TextArea, TextInput } from "@/components/form/TextInput";
@@ -21,6 +22,7 @@ import {
   STATUSES,
   UPLOAD_FALLBACK_EMAIL,
   type DepartureValues,
+  departurePayload,
 } from "@/data/departure";
 
 const STEPS = ["Job", "Proof", "Work done", "You", "Review"] as const;
@@ -61,6 +63,7 @@ export default function DepartureForm() {
     EMPTY_DEPARTURE as DepartureValues & Record<string, never>,
     REQUIRED,
     STEPS.length,
+    (values) => submitToJotform(JOTFORM_IDS.departure, departurePayload(values)),
   );
   const v = w.values;
   const onSite = hoursOnSite(v.startTime, v.finishTime);
@@ -402,6 +405,8 @@ export default function DepartureForm() {
           onNext={w.next}
           onSubmit={w.submit}
           accent={ACCENT}
+          sending={w.sending}
+          error={w.error}
           submitLabel="Submit report"
         />
       </div>

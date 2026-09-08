@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Camera, RotateCcw, TriangleAlert, X } from "lucide-react";
+import { compressImage } from "@/lib/image";
 import { useAccent } from "@/lib/accents";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ export function PhotoUpload({
 }) {
   const theme = useAccent();
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = React.useState(false);
   const [preview, setPreview] = React.useState<string | null>(null);
   const [portrait, setPortrait] = React.useState(false);
 
@@ -46,7 +48,15 @@ export function PhotoUpload({
         accept="image/*"
         capture="environment"
         className="sr-only"
-        onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+        onChange={async (e) => {
+          const picked = e.target.files?.[0];
+          e.target.value = "";
+          if (!picked) return;
+          setBusy(true);
+          // Shrink before it goes anywhere — a raw camera shot is 4–12 MB.
+          onChange(await compressImage(picked));
+          setBusy(false);
+        }}
       />
 
       {preview ? (
@@ -95,7 +105,7 @@ export function PhotoUpload({
             Take or choose a photo
           </span>
           <span className="text-[13px] text-slate-500 dark:text-slate-400">
-            Hold the phone sideways
+            {busy ? "Preparing…" : "Hold the phone sideways"}
           </span>
         </button>
       )}

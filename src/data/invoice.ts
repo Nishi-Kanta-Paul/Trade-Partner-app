@@ -1,3 +1,12 @@
+import {
+  JOTFORM_IDS,
+  newPayload,
+  put,
+  putAddress,
+  putChoices,
+  putDate,
+} from "@/lib/jotform";
+
 /** Options lifted verbatim from the live "Partner Invoice" Jotform. */
 export const SERVICES_PROVIDED = [
   "Job Walk Agent",
@@ -87,3 +96,34 @@ export const EMPTY_INVOICE: InvoiceValues = {
   paymentDetail: "",
   billingNotes: "",
 };
+
+/**
+ * Field names read from the live form's HTML — see `src/lib/jotform.ts`.
+ * Note this form takes the name as one plain textbox, not a first/last pair.
+ */
+export function invoicePayload(v: InvoiceValues) {
+  const data = newPayload(JOTFORM_IDS.invoice);
+
+  putDate(data, "q2_datetime_2", v.date);
+  put(data, "q4_textbox_4", v.projectName);
+  putAddress(data, "q18_projectAddress", {
+    line1: v.street,
+    line2: v.street2,
+    city: v.city,
+    state: v.state,
+  });
+
+  put(data, "q6_textbox_6", `${v.firstName} ${v.lastName}`.trim());
+  put(data, "q7_textbox_7", v.company);
+  put(data, "q8_textbox_8", v.email);
+  put(data, "q9_textbox_9", v.phone);
+
+  put(data, "q10_textbox_10", v.billingAmount);
+  putChoices(data, "q11_checkbox_11", v.services);
+  putDate(data, "q12_datetime_12", v.serviceStart);
+  putDate(data, "q13_datetime_13", v.serviceEnd);
+  put(data, "q14_radio_14", v.paymentMethod);
+  put(data, "q15_textbox_15", v.paymentDetail);
+  put(data, "q16_textarea_16", v.billingNotes);
+  return data;
+}

@@ -1,4 +1,5 @@
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { JOTFORM_IDS, submitToJotform } from "@/lib/jotform";
 import { ACCENTS, AccentProvider } from "@/lib/accents";
 import { cn } from "@/lib/utils";
 import { Field } from "@/components/form/Field";
@@ -16,7 +17,12 @@ import {
   WizardActions,
   useWizard,
 } from "@/components/form/Wizard";
-import { CLEANING_TYPES, EMPTY_ARRIVAL, type ArrivalValues } from "@/data/arrival";
+import {
+  CLEANING_TYPES,
+  EMPTY_ARRIVAL,
+  type ArrivalValues,
+  arrivalPayload,
+} from "@/data/arrival";
 
 const STEPS = ["Check in", "Project", "Crew", "You", "Review"] as const;
 
@@ -45,6 +51,7 @@ export default function ArrivalForm() {
     EMPTY_ARRIVAL as ArrivalValues & Record<string, never>,
     REQUIRED,
     STEPS.length,
+    (values) => submitToJotform(JOTFORM_IDS.arrival, arrivalPayload(values)),
   );
   const v = w.values;
 
@@ -324,6 +331,8 @@ export default function ArrivalForm() {
           onNext={w.next}
           onSubmit={w.submit}
           accent={ACCENT}
+          sending={w.sending}
+          error={w.error}
           submitLabel="Submit arrival"
         />
       </div>

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, ArrowRight, CircleCheckBig, Send } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleCheckBig, LoaderCircle, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ACCENTS, type Accent } from "@/lib/accents";
 import { cn } from "@/lib/utils";
@@ -14,12 +14,16 @@ export function useWizard<T extends Values>(
   initial: T,
   required: Record<number, string[]>,
   stepCount: number,
+  /** Sends the finished form. Rejecting keeps the partner on the review step. */
+  send?: (values: T) => Promise<void>,
 ) {
   const navigate = useNavigate();
   const [step, setStep] = React.useState(0);
   const [values, setValues] = React.useState<T>(initial);
   const [showErrors, setShowErrors] = React.useState(false);
   const [submitted, setSubmitted] = React.useState(false);
+  const [sending, setSending] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   function set<K extends keyof T>(key: K, value: T[K]) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -66,12 +70,23 @@ export function useWizard<T extends Values>(
     next,
     back,
     submitted,
-    // TODO: nothing is persisted yet — every form ends here. Send `values` to
-    // the chosen destination (Jotform submission endpoint, or our own API)
-    // before flipping to the success screen. This is the only place to change.
-    submit: () => {
-      setSubmitted(true);
-      window.scrollTo({ top: 0 });
+    sending,
+    error,
+    submit: async () => {
+      if (sending) return;
+      setError(null);
+      setSending(true);
+      try {
+        await send?.(values);
+        setSubmitted(true);
+        window.scrollTo({ top: 0 });
+      } catch (cause) {
+        setError(
+          cause instanceof Error ? cause.message : "Something went wrong. Try again.",
+        );
+      } finally {
+        setSending(false);
+      }
     },
   };
 }
@@ -140,6 +155,8 @@ export function WizardActions({
   onSubmit,
   submitLabel = "Submit",
   accent = "sky",
+  sending,
+  error,
 }: {
   step: number;
   lastStep: number;
@@ -149,9 +166,20 @@ export function WizardActions({
   onSubmit: () => void;
   submitLabel?: string;
   accent?: Accent;
+  sending?: boolean;
+  error?: string | null;
 }) {
   return (
     <div className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[#0a1426]/95">
+      {error ? (
+        <p
+          role="alert"
+          className="mx-auto max-w-2xl px-4 pt-3 text-[13px] leading-relaxed font-semibold text-rose-600 dark:text-rose-400"
+        >
+          {error}
+        </p>
+      ) : null}
+
       <div className="mx-auto flex max-w-2xl gap-2.5 px-4 py-3">
         {step > 0 ? (
           <button
@@ -182,13 +210,23 @@ export function WizardActions({
           <button
             type="button"
             onClick={onSubmit}
+            disabled={sending}
             className={cn(
-              "flex h-13 flex-1 items-center justify-center gap-2 rounded-xl text-[15px] font-bold transition-all active:scale-[.98]",
+              "flex h-13 flex-1 items-center justify-center gap-2 rounded-xl text-[15px] font-bold transition-all active:scale-[.98] disabled:opacity-70",
               ACCENTS[accent].button,
             )}
           >
-            <Send className="size-4.5" />
-            {submitLabel}
+            {sending ? (
+              <>
+                <LoaderCircle className="size-4.5 animate-spin" />
+                Sending…
+              </>
+            ) : (
+              <>
+                <Send className="size-4.5" />
+                {submitLabel}
+              </>
+            )}
           </button>
         )}
       </div>

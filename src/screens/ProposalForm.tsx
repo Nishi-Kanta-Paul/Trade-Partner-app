@@ -1,4 +1,5 @@
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { JOTFORM_IDS, submitToJotform } from "@/lib/jotform";
 import { AccentProvider } from "@/lib/accents";
 import { Field } from "@/components/form/Field";
 import { MoneyInput, TextArea, TextInput } from "@/components/form/TextInput";
@@ -9,6 +10,7 @@ import {
   OPPORTUNITY_TYPES,
   SERVICES,
   type ProposalValues,
+  proposalPayload,
 } from "@/data/proposal";
 import {
   StepCard,
@@ -35,8 +37,21 @@ const REQUIRED: Record<number, string[]> = {
 };
 
 export default function ProposalForm() {
-  const { step, values, set, errorFor, stepComplete, next, back, submitted, submit } =
-    useWizard<ProposalValues>(EMPTY_PROPOSAL, REQUIRED, STEPS.length);
+  const {
+    step,
+    values,
+    set,
+    errorFor,
+    stepComplete,
+    next,
+    back,
+    submitted,
+    submit,
+    sending,
+    error,
+  } = useWizard<ProposalValues>(EMPTY_PROPOSAL, REQUIRED, STEPS.length, (values) =>
+    submitToJotform(JOTFORM_IDS.proposal, proposalPayload(values)),
+  );
 
   if (submitted)
     return (
@@ -349,6 +364,8 @@ export default function ProposalForm() {
           onNext={next}
           onSubmit={submit}
           accent={ACCENT}
+          sending={sending}
+          error={error}
           submitLabel="Submit proposal"
         />
       </div>

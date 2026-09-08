@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ImagePlus, TriangleAlert, X } from "lucide-react";
+import { formatSize, isTooLarge, prepareUploads } from "@/lib/image";
 import { useAccent } from "@/lib/accents";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ export function MediaUpload({
 }) {
   const theme = useAccent();
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = React.useState(false);
   const [items, setItems] = React.useState<Item[]>([]);
 
   React.useEffect(() => {
@@ -49,6 +51,7 @@ export function MediaUpload({
   }, [files]);
 
   const portraitCount = items.filter((item) => item.portrait).length;
+  const oversized = files.filter(isTooLarge);
 
   return (
     <div className="space-y-2.5">
@@ -58,9 +61,14 @@ export function MediaUpload({
         accept="image/*,video/*"
         multiple
         className="sr-only"
-        onChange={(e) => {
-          onChange([...files, ...Array.from(e.target.files ?? [])]);
+        onChange={async (e) => {
+          const picked = Array.from(e.target.files ?? []);
           e.target.value = "";
+          if (!picked.length) return;
+          setBusy(true);
+          // Photos are shrunk; videos are kept as they are.
+          onChange([...files, ...(await prepareUploads(picked))]);
+          setBusy(false);
         }}
       />
 
@@ -112,12 +120,21 @@ export function MediaUpload({
         )}
       >
         <ImagePlus className="size-5" />
-        {items.length ? "Add more" : "Add photos or videos"}
+        {busy ? "Preparing…" : items.length ? "Add more" : "Add photos or videos"}
       </button>
 
       {items.length ? (
         <p className="text-[13px] text-slate-500 dark:text-slate-400">
           {items.length} attached
+        </p>
+      ) : null}
+
+      {oversized.length ? (
+        <p className="flex items-start gap-2 rounded-xl bg-rose-50 p-3 text-[13px] leading-relaxed font-semibold text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
+          <TriangleAlert className="mt-px size-4 shrink-0" />
+          {oversized.map((f) => `${f.name} (${formatSize(f.size)})`).join(", ")} —{" "}
+          {oversized.length === 1 ? "this is" : "these are"} over the 10 MB limit and will
+          be rejected. Record a shorter clip or remove it.
         </p>
       ) : null}
 

@@ -1,3 +1,14 @@
+import {
+  JOTFORM_IDS,
+  newPayload,
+  put,
+  putAddress,
+  putChoices,
+  putDate,
+  putName,
+  putPhone,
+} from "@/lib/jotform";
+
 /** Options lifted verbatim from the live Jotform so submissions stay comparable. */
 
 export const OPPORTUNITY_TYPES = [
@@ -127,3 +138,44 @@ export const EMPTY_PROPOSAL: ProposalValues = {
   comments: "",
   ...Object.fromEntries(AGREEMENTS.map((a) => [a.name, ""])),
 };
+
+/** Field names read from the live form's HTML — see `src/lib/jotform.ts`. */
+export function proposalPayload(v: ProposalValues) {
+  const data = newPayload(JOTFORM_IDS.proposal);
+
+  putDate(data, "q3_todaysDate", String(v.date));
+  put(data, "q4_opportunity", String(v.opportunityNumber));
+  put(data, "q23_typeOf", String(v.opportunityType));
+
+  putName(data, "q5_yourName", String(v.firstName), String(v.lastName));
+  put(data, "q6_yourCompany", String(v.company));
+  putPhone(data, "q7_yourPhone", String(v.phone));
+  put(data, "q8_isIt", String(v.smsOk));
+  put(data, "q9_yourEmail", String(v.email));
+  putAddress(data, "q35_yourCity", {
+    city: String(v.yourCity),
+    state: String(v.yourState),
+  });
+
+  putAddress(data, "q27_opportunityLocation", {
+    city: String(v.jobCity),
+    state: String(v.jobState),
+  });
+  put(data, "q17_numberOf17", String(v.miles));
+  putChoices(data, "q37_selectAll", v.services as string[]);
+  put(data, "q38_inYour", String(v.scope));
+  put(data, "q39_totalPrice", String(v.price));
+
+  put(data, "q13_equipmentampamp", String(v.equipment));
+  put(data, "q36_waterYou", String(v.water));
+  put(data, "q18_businessRelationship", String(v.businessRelationship));
+  put(data, "q28_indemnifcationampamp", String(v.indemnification));
+  put(data, "q29_youHave29", String(v.paymentTerms));
+  put(data, "q30_youHave30", String(v.projectReports));
+  put(data, "q33_youHave33", String(v.projectCommunication));
+  put(data, "q21_youWill21", String(v.ppe));
+  put(data, "q34_youFully", String(v.scopeUnderstood));
+
+  put(data, "q20_anyAdditional", String(v.comments));
+  return data;
+}

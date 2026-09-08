@@ -1,4 +1,5 @@
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { JOTFORM_IDS, submitToJotform } from "@/lib/jotform";
 import { ACCENTS, AccentProvider } from "@/lib/accents";
 import { cn } from "@/lib/utils";
 import { Field } from "@/components/form/Field";
@@ -12,7 +13,7 @@ import {
   WizardActions,
   useWizard,
 } from "@/components/form/Wizard";
-import { EMPTY_RECAP, type RecapValues } from "@/data/recap";
+import { EMPTY_RECAP, type RecapValues, recapPayload } from "@/data/recap";
 
 const STEPS = ["Project", "Timeline", "The work", "You", "Review"] as const;
 
@@ -43,6 +44,7 @@ export default function RecapForm() {
     EMPTY_RECAP as RecapValues & Record<string, never>,
     REQUIRED,
     STEPS.length,
+    (values) => submitToJotform(JOTFORM_IDS.recap, recapPayload(values)),
   );
   const v = w.values;
   const suggestedDays = spanInDays(v.startDate, v.completedDate);
@@ -336,6 +338,8 @@ export default function RecapForm() {
           onNext={w.next}
           onSubmit={w.submit}
           accent={ACCENT}
+          sending={w.sending}
+          error={w.error}
           submitLabel="Submit recap"
         />
       </div>
